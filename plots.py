@@ -17,21 +17,22 @@ log_data = np.log10(data)
 ### FIXME remove null values. 
 # ==============================================================================================================
 # CREATING HISTOGRAM
-fig, axs = plt.subplots(1, 5)
+fig, axs = plt.subplots(1, 6)
 # Create histogram bins
 ### FIXME Issue 2: correct the number of bins. 5 per order incriment?
 bins = np.logspace(start=0, stop=np.log10(data["POP"].max(axis=0))+1, base=10)
 # Plot the histogram (Empirical distribution)
-vals, _, _ = axs[0].hist(data, bins=bins)
+vals, *_ = axs[0].hist(data, bins=bins)
 # Plot midpoints
 #### FIXME: plot and join midpoints.
 midpoints = 0.5 * (bins[1:] + bins[:-1])
 axs[0].plot(midpoints, vals, c='green')
-axs[0].set_xscale('log')   # log scale the x axis
+# axs[0].set_xscale('log')   # log scale the x axis
 # ==============================================================================================================
 # Theoretical Log-normal distribution
 mu = log_data["POP"].mean()
 s = log_data["POP"].std()
+print(f"mean of log(data) is {mu} and the std of log(data) is {s}")
 ### FIXME: variable names
 x = np.linspace(0, log_data["POP"].max()+1, 100)
 y = stats.norm.pdf(x, loc=mu, scale=s)
@@ -41,8 +42,10 @@ axs[1].plot(x, y, c='red')
 ### WORKS AS INTENDED ###
 ### FIXME: add the counts axis to the right size of the plot. ###
 log_bins = np.arange(0, log_data["POP"].max()+1, 0.05)
-axs[4].hist(log_data, bins=log_bins)
+axs[2].hist(log_data, bins=log_bins)
 axs[3].hist(log_data, bins=log_bins, density=True)   # Area under the curve = 1, like a pdf.
 axs[3].plot(x, y, c='red')
+# ==============================================================================================================
+print(stats.anderson(log_data["POP"], dist='norm'))
 # ==============================================================================================================
 plt.show()
