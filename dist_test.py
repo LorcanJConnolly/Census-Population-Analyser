@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+# Test
+from matplotlib.animation import FuncAnimation
+
 df = np.load(r'C:\Users\lconn\Documents\Programming\Python\Python Projects\Population_distribution\Pop_distribution_analyser\Numpy_Arrays/UK_array.npy')
 ldf = np.load(r'C:\Users\lconn\Documents\Programming\Python\Python Projects\Population_distribution\Pop_distribution_analyser\Numpy_Arrays/log_UK_array.npy')
 
@@ -10,6 +13,8 @@ class Population_Dist_Tester():
     def __init__(self, data):
         self.data = data
         self.desc_data = np.sort(self.data)[::-1]
+        self.ln_pvalues = []
+        self.p_pvalues = []
 
     def build_sample(self, sample):
         # Takes the sample, reassigns the sample pointer to a one bigger slice of the data set.
@@ -48,10 +53,9 @@ class Population_Dist_Tester():
         # Or you can compare the p-value to a level of significance a, usually a=0.05 or 0.01 (you decide, the lower a is, the more significant). 
         ### If p-value is lower than a, then it is very probable that the two distributions are different.
 
-        print(stats.kstest(ecdf, cdf)) 
-
-        # return the p-value
-        return "DONE"
+        res = stats.kstest(ecdf, cdf)
+        ### return the pvalue
+        return res.pvalue
 
     # FIXME: is "sample" the best term here.
     def goodness_of_fit_testing(self, sample):
@@ -59,28 +63,52 @@ class Population_Dist_Tester():
 
         # KS Tests here
         # returns the p-value from the tests which is then added to an array used for plotting
-        ks_ln_res = self.KS_testing(sample, "log-normal")
-        ks_p_res = self.KS_testing(sample, "pareto")
+        self.ln_pvalues.append(self.KS_testing(sample, "log-normal"))
+        self.p_pvalues.append(self.KS_testing(sample, "pareto"))
+
+        # print(self.ln_pvalues)
 
         # Plot results as animation.
-        
+        self.plotter(sample, self.ln_pvalues, "log-normal")
+        # self.plotter(sample, self.p_pvalues, "pareto")
+
+
         # Get a new sample
         sample = self.build_sample(sample)
 
         if len(sample) == len(self.data):
             print("Samples are equal size, STOP!")
-            return "KS Values here"
+            return len(self.ln_pvalues), len(self.p_pvalues)
+            # return self.ln_pvalues
         else:
-            self.KS_testing(sample)
+            return self.goodness_of_fit_testing(sample)
+
+    def plotter(self, sample, p_values, distribution):
+        # fig = plt.plot()
+        # plt.style.use('fivethirtyeight')
+
+        # plt.plot(sample, p_values)
+        # plt.title(distribution)
+        # plt.show()
+
+        ### May need to create a new class for the animation plotting.
+        pass
 
 
-data = np.linspace(0, 10, num=20)
-# X = Population_Dist_Tester(data)
-X = Population_Dist_Tester(df)
+data = np.linspace(0, 10, num=10)
+X = Population_Dist_Tester(data)
+# X = Population_Dist_Tester(df)
+# print(len(df)) # 10174
 
-# print(X.goodness_of_fit_testing(X.desc_data[:11]))
-print(X.KS_testing(X.desc_data[:], distribution="pareto"))
-print(X.KS_testing(X.desc_data[:], distribution="log-normal"))
+X.goodness_of_fit_testing(X.desc_data[:1])
+
+# sample = X.desc_data[:10]
+# p_values = np.linspace(0, 11, num=10)
+# dist = "LN"
+# X.plotter(sample, p_values, dist)
+
+# print(X.KS_testing(X.desc_data[:], distribution="pareto"))
+# print(X.KS_testing(X.desc_data[:], distribution="log-normal"))
 
 # ANIMATION
 # from matplotlib.animation import PillowWriter
